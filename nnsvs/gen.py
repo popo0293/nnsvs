@@ -61,8 +61,9 @@ def predict_timelag(device, labels, timelag_model, timelag_config, timelag_in_sc
 
     # Extract musical/linguistic context
     timelag_linguistic_features = fe.linguistic_features(
-        note_labels, binary_dict, continuous_dict,
-        add_frame_features=False, subphone_features=None).astype(np.float32)
+        note_labels, 
+        binary_dict, 
+        continuous_dict).astype(np.float32)
 
     # Adjust input features if we use log-f0 conditioning
     if log_f0_conditioning:
@@ -74,12 +75,13 @@ def predict_timelag(device, labels, timelag_model, timelag_config, timelag_in_sc
                     kind="slinear")
 
     # Normalization
-    timelag_linguistic_features = timelag_in_scaler.transform(timelag_linguistic_features)
     if isinstance(timelag_in_scaler, MinMaxScaler):
         # clip to feature range
         timelag_linguistic_features = np.clip(
             timelag_linguistic_features, timelag_in_scaler.feature_range[0],
             timelag_in_scaler.feature_range[1])
+    else:
+        timelag_linguistic_features = timelag_in_scaler.transform(timelag_linguistic_features)
 
     # Run model
     x = torch.from_numpy(timelag_linguistic_features).unsqueeze(0).to(device)
